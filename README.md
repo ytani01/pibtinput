@@ -1,14 +1,11 @@
-# pibt
+# pibtinput
 
 Python library for bluetooth
 
 
-##
-
-
 ## ペアリング
 
-### 順序が重要: trust -> pair -> connect
+### 順序が重要!: trust -> pair -> connect
 
 ``` bash
 sudo bluetoothctl
@@ -32,4 +29,23 @@ sudo evtest
 ```
 
 
-##
+## Bluetooth trouble shooting
+
+以下の手順でだいたい、リセットされる。
+
+``` bash
+sudo bluetoothctl
+remove MAC_ADDR
+exit
+
+sudo hciconfig hci0 down
+sudo hciconfig hci0 up
+sudo systemctl restart bluetooth.service
+```
+
+## 参考
+
+### 8BitDo Micro
+
+Keyboard mode
+![](docs/8BitDo_Micro_mode-K.jpg)
