@@ -62,7 +62,7 @@ uv run pyright src samples
 echo "# mypy"
 uv run mypy src samples tests
 
-uv run pibt -V
+uv run pibtinput -V
 '''
 depends = ["upgradeproject"]
 
@@ -71,7 +71,7 @@ description = "test"
 run = '''
 uv run pytest tests
 
-uv run pibt -V
+uv run pibtinput -V
 '''
 depends = ["lint"]
 
@@ -81,7 +81,7 @@ run = '''
 echo "# build"
 rm -rf dist
 uv build
-uv run pibt -V
+uv run pibtinput -V
 '''
 depends = ["test"]
 

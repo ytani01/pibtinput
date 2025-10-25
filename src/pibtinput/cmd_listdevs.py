@@ -8,6 +8,7 @@ from .utils.mylogger import get_logger
 
 class CmdListDevs:
     """Test."""
+
     def __init__(self, debug=False) -> None:
         self.__debug = debug
         self.__log = get_logger(self.__class__.__name__, self.__debug)
