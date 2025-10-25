@@ -6,7 +6,7 @@ import evdev
 from .utils.mylogger import get_logger
 
 
-class CmdListDevs:
+class CmdList:
     """Test."""
 
     def __init__(self, debug=False) -> None:

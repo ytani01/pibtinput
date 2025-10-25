@@ -7,7 +7,7 @@ import click
 
 from . import __version__
 from .cmd_input import CmdInput
-from .cmd_listdevs import CmdListDevs
+from .cmd_list import CmdList
 from .utils.clickutils import click_common_opts
 from .utils.mylogger import errmsg, get_logger
 
@@ -29,14 +29,14 @@ def cli(ctx, debug):
 
 @cli.command()
 @click_common_opts(__version__)
-def listdevs(ctx, debug):
+def list(ctx, debug):
     """List devices."""
     __log = get_logger(__name__, debug)
     __log.debug("cmd_name=%s", ctx.command.name)
 
     app = None
     try:
-        app = CmdListDevs(debug=debug)
+        app = CmdList(debug=debug)
         app.main()
 
     except Exception as _e:
@@ -48,17 +48,21 @@ def listdevs(ctx, debug):
 
 
 @cli.command()
-@click.argument("dev_name", type=str, nargs=1)
+@click.argument("dev_words", type=str, nargs=-1)
 @click_common_opts(__version__)
-def input(ctx, dev_name, debug):
-    """List devices."""
+def input(ctx, dev_words, debug):
+    """input test."""
     __log = get_logger(__name__, debug)
     __log.debug("cmd_name=%s", ctx.command.name)
-    __log.debug("dev_name=%s", dev_name)
+    __log.debug("dev_words=%s", dev_words)
+
+    if not dev_words:
+        __log.error("no dev_words")
+        return
 
     app = None
     try:
-        app = CmdInput(dev_name, debug=debug)
+        app = CmdInput(dev_words, debug=debug)
         app.main()
 
     except Exception as _e:
