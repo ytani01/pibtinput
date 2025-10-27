@@ -3,6 +3,7 @@
 #
 import evdev
 
+from .pibtinput import PiBtInput
 from .utils.mylogger import get_logger
 
 
@@ -16,76 +17,47 @@ class CmdInput:
 
         self.dev_words = dev_words
 
-    def search_dev(self, dev_words):
-        """Search device."""
-        self.__log.debug("dev_words=%s", dev_words)
+        self.onkeys: list[str] = []
+        self.prev_onkeys: list[str] = []
 
-        input_dev = None
-        devs = evdev.util.list_devices()
-        for d in sorted(devs):
-            _inputdev = evdev.device.InputDevice(d)
-            self.__log.debug("_inputdev=%s", _inputdev)
+        self.bt = PiBtInput(self.__debug)
 
-            input_dev = _inputdev
-            for w in self.dev_words:
-                if w not in _inputdev.name:
-                    input_dev = None
-                    break
-            if input_dev:
-                break
+    def cb_ev(self, key_name, key_state):
+        """Event Callback."""
+        self.__log.debug("key_name=%s, key_state=%s", key_name, key_state)
 
-        return input_dev
+        if key_state == evdev.KeyEvent.key_down:
+            # キーが押下されたら、self.onkeysに加える
+            self.onkeys.append(key_name)
+            self.onkeys = sorted(list(set(self.onkeys)))
 
-    def get_key_event(self, ev):
-        """Get event key name."""
-        self.__log.debug("ev=%s", ev)
+        elif key_state == evdev.KeyEvent.key_up:
+            # キーが放されたら、self.onkeysから削除する
+            self.onkeys.remove(key_name)
 
-        if ev.type != evdev.ecodes.EV_KEY:
-            self.__log.debug("ignore: ev.type=%s", ev.type)
-            return None, None
+        else:
+            # リピートなどは無視
+            return
 
-        key_name = evdev.ecodes.keys[ev.code]
-        self.__log.debug("key_name=%s", key_name)
-
-        key_state = evdev.KeyEvent(ev).keystate
-        self.__log.debug("key_state=%s", key_state)
-
-        return key_name, key_state
+        if self.onkeys != self.prev_onkeys:
+            print(f"{key_name}:{key_state}  {self.onkeys}")
+            self.prev_onkeys = self.onkeys.copy()
 
     def main(self):
         """Main."""
         self.__log.debug("")
 
-        input_dev = self.search_dev(self.dev_words)
-        if input_dev is None:
-            self.__log.error("no such device: %s", self.dev_words)
+        input_dev = self.bt.search_input_devs(self.dev_words)
+        if not input_dev:
+            self.__log.error("no such device: %s", list(self.dev_words))
             return
 
-        print(f"input_dev: {input_dev}")
+        if len(input_dev) > 1:
+            self.__log.error("ambiguous: %s", [d.name for d in input_dev])
+            return
 
-        on_keys = []
-        prev_on_keys = []
-        for ev in input_dev.read_loop():
-            key_name, key_state = self.get_key_event(ev)
-            if not key_name:
-                continue
-
-            if key_state == evdev.KeyEvent.key_down:
-                # キーが押下されたら、on_keysに加える
-                on_keys.append(key_name)
-                on_keys = sorted(list(set(on_keys)))
-
-            elif key_state == evdev.KeyEvent.key_up:
-                # キーが放されたら、on_keysから削除する
-                on_keys.remove(key_name)
-
-            else:
-                # リピートなどは無視
-                continue
-
-            if on_keys != prev_on_keys:
-                print(f"{key_name}:{key_state}  {on_keys}")
-                prev_on_keys = on_keys.copy()
+        print(f"input_dev: {input_dev[0]}")
+        self.bt.read_loop(input_dev[0], self.cb_ev)
 
     def end(self):
         """End."""
