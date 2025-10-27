@@ -1,13 +1,13 @@
-[tasks.upgradeapt]
-description = "upgrade apt packages"
+[tasks.resetbluetooth]
+description = "reset bluetooth"
 run = '''
-echo "# upgrade apt packages"
 export LANG=C
-sudo apt update
-sudo apt upgrade
-sudo apt autoremove -y
+
+sudo hciconfig hci0 down
+sudo hciconfig hci0 up
+sudo systemctl restart bluetooth.service
+sudo systemctl status bluetooth.service
 '''
-alias = "upapt"
 
 [tasks.upgrademise]
 description = "upgrade mise"
