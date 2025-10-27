@@ -6,21 +6,26 @@
 
 ### === edev
 
-以下のコマンドで、イベント時の
+以下のコマンドで、イベント時のメッセージや情報を確認
 ``` bash
 udevadm monitor --property
+
+udevadm info -a -n /dev/input/event
 ```
 
-``/etc/udev/rules.d/99-foo.rules``にルールを設定
+ルールを設定
+
+e.g. ``/etc/udev/rules.d/99-8BitDo.rules``
 ``` text
-ACTION=="bind", SUBSYSTEM=="input", ATTRS{name}=="Bluetooth Keyboard", RUN+="/usr/local/bin/on_btkeyboard_connected.sh"
+ACTION=="add", SUBSYSTEM=="input", ATTRS{name}=="8BitDo Micro gamepad Keyboard" SYMLINK+="input/8bitdo.kbd"
+ACTION=="add", SUBSYSTEM=="input", ATTRS{name}=="8BitDo Micro gamepad" SYMLINK+="input/8bitdo.js"
 ```
 
 ルールを反映
 
 ``` bash
 sudo udevadm control --reload-rules
-sudo udevadm trigger
+# sudo udevadm trigger
 ```
 
 ### === Triggerhappy
