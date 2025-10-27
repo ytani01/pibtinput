@@ -49,12 +49,20 @@ def list(ctx, debug):
 
 @cli.command()
 @click.argument("dev_words", type=str, nargs=-1)
+@click.option(
+    "--repeat",
+    "-r",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="show repeat",
+)
 @click_common_opts(__version__)
-def input(ctx, dev_words, debug):
+def input(ctx, dev_words, repeat, debug):
     """input test."""
     __log = get_logger(__name__, debug)
     __log.debug("cmd_name=%s", ctx.command.name)
-    __log.debug("dev_words=%s", dev_words)
+    __log.debug("dev_words=%s, repeat=%s", dev_words, repeat)
 
     if not dev_words:
         __log.error("no dev_words")
@@ -62,7 +70,7 @@ def input(ctx, dev_words, debug):
 
     app = None
     try:
-        app = CmdInput(dev_words, debug=debug)
+        app = CmdInput(dev_words, repeat, debug=debug)
         app.main()
 
     except Exception as _e:

@@ -1,6 +1,8 @@
 #
 # (c) 2025 Yoichi Tanibayashi
 #
+import copy
+
 import evdev
 
 from .pibtinput import PiBtInput
@@ -10,15 +12,19 @@ from .utils.mylogger import get_logger
 class CmdInput:
     """Test."""
 
-    def __init__(self, dev_words, debug=False) -> None:
+    def __init__(self, dev_words, flag_repeat=False, debug=False) -> None:
         self.__debug = debug
         self.__log = get_logger(self.__class__.__name__, self.__debug)
-        self.__log.debug("dev_words=%s", dev_words)
+        self.__log.debug(
+            "dev_words=%s, flag_repeat=%s", dev_words, flag_repeat
+        )
 
         self.dev_words = dev_words
+        self.flag_repeat = flag_repeat
 
-        self.onkeys: list[str] = []
-        self.prev_onkeys: list[str] = []
+        # [{'KEY_?': 1}, {'KEY_?': 12}, ...]
+        self.onkeys: list[dict[str, int]] = []
+        self.prev_onkeys: list[dict[str, int]] = []
 
         self.bt = PiBtInput(self.__debug)
 
@@ -28,20 +34,29 @@ class CmdInput:
 
         if key_state == evdev.KeyEvent.key_down:
             # キーが押下されたら、self.onkeysに加える
-            self.onkeys.append(key_name)
-            self.onkeys = sorted(list(set(self.onkeys)))
+            self.onkeys.append({key_name: 1})
 
-        elif key_state == evdev.KeyEvent.key_up:
+        if key_state == evdev.KeyEvent.key_hold:
+            # リピート
+            for k in self.onkeys:
+                if key_name in k:
+                    k[key_name] += 1
+
+        if key_state == evdev.KeyEvent.key_up:
             # キーが放されたら、self.onkeysから削除する
-            self.onkeys.remove(key_name)
+            self.onkeys[:] = [k for k in self.onkeys if key_name not in k]
 
-        else:
-            # リピートなどは無視
-            return
+        onkeys_set = {tuple(k.items()) for k in self.onkeys}
+        prev_onkeys_set = {tuple(k.items()) for k in self.prev_onkeys}
 
-        if self.onkeys != self.prev_onkeys:
+        if onkeys_set != prev_onkeys_set:
+            self.__log.debug(f"{prev_onkeys_set} -> {onkeys_set}")
+            self.prev_onkeys = copy.deepcopy(self.onkeys)
+
+            if key_state == evdev.KeyEvent.key_hold and not self.flag_repeat:
+                return
+
             print(f"{key_name}:{key_state}  {self.onkeys}")
-            self.prev_onkeys = self.onkeys.copy()
 
     def main(self):
         """Main."""
