@@ -28,15 +28,17 @@ def cli(ctx, debug):
 
 
 @cli.command()
+@click.argument("search_keywords", type=str, nargs=-1)
 @click_common_opts(__version__)
-def list(ctx, debug):
+def list(ctx, search_keywords, debug):
     """List devices."""
     __log = get_logger(__name__, debug)
     __log.debug("cmd_name=%s", ctx.command.name)
+    __log.debug("search_keywords=%s", search_keywords)
 
     app = None
     try:
-        app = CmdList(debug=debug)
+        app = CmdList(search_keywords, debug=debug)
         app.main()
 
     except Exception as _e:
@@ -48,7 +50,7 @@ def list(ctx, debug):
 
 
 @cli.command()
-@click.argument("dev_words", type=str, nargs=-1)
+@click.argument("search_keywords", type=str, nargs=-1)
 @click.option(
     "--repeat",
     "-r",
@@ -58,19 +60,19 @@ def list(ctx, debug):
     help="show repeat",
 )
 @click_common_opts(__version__)
-def input(ctx, dev_words, repeat, debug):
+def input(ctx, search_keywords, repeat, debug):
     """input test."""
     __log = get_logger(__name__, debug)
     __log.debug("cmd_name=%s", ctx.command.name)
-    __log.debug("dev_words=%s, repeat=%s", dev_words, repeat)
+    __log.debug("search_keywords=%s, repeat=%s", search_keywords, repeat)
 
-    if not dev_words:
-        __log.error("no dev_words")
+    if not search_keywords:
+        __log.error("no search_keywords")
         return
 
     app = None
     try:
-        app = CmdInput(dev_words, repeat, debug=debug)
+        app = CmdInput(search_keywords, repeat, debug=debug)
         app.main()
 
     except Exception as _e:

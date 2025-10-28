@@ -1,7 +1,6 @@
 #
 # (c) 2025 Yoichi Tanibayashi
 #
-import copy
 
 import evdev
 
@@ -22,41 +21,31 @@ class CmdInput:
         self.dev_words = dev_words
         self.flag_repeat = flag_repeat
 
-        # [{'KEY_?': 1}, {'KEY_?': 12}, ...]
-        self.onkeys: list[dict[str, int]] = []
-        self.prev_onkeys: list[dict[str, int]] = []
+        self.prev_onkeys: dict[str, int] = {}
 
         self.bt = PiBtInput(self.__debug)
 
-    def cb_ev(self, key_name, key_state):
+    def cb_ev(self, key_name, key_state, onkeys):
         """Event Callback."""
-        self.__log.debug("key_name=%s, key_state=%s", key_name, key_state)
+        self.__log.debug(
+            "key_name=%s,key_state=%s,onkeys=%s", key_name, key_state, onkeys
+        )
 
-        if key_state == evdev.KeyEvent.key_down:
-            # キーが押下されたら、self.onkeysに加える
-            self.onkeys.append({key_name: 1})
+        if onkeys != self.prev_onkeys:
+            self.__log.debug(f"{self.prev_onkeys} -> {onkeys}")
+            self.prev_onkeys = onkeys.copy()
 
-        if key_state == evdev.KeyEvent.key_hold:
-            # リピート
-            for k in self.onkeys:
-                if key_name in k:
-                    k[key_name] += 1
-
-        if key_state == evdev.KeyEvent.key_up:
-            # キーが放されたら、self.onkeysから削除する
-            self.onkeys[:] = [k for k in self.onkeys if key_name not in k]
-
-        onkeys_set = {tuple(k.items()) for k in self.onkeys}
-        prev_onkeys_set = {tuple(k.items()) for k in self.prev_onkeys}
-
-        if onkeys_set != prev_onkeys_set:
-            self.__log.debug(f"{prev_onkeys_set} -> {onkeys_set}")
-            self.prev_onkeys = copy.deepcopy(self.onkeys)
+            if onkeys.get("KEY_S"):
+                if onkeys["KEY_S"] > 10:
+                    print("Bye !")
+                    return False
 
             if key_state == evdev.KeyEvent.key_hold and not self.flag_repeat:
-                return
+                return True
 
-            print(f"{key_name}:{key_state}  {self.onkeys}")
+            print(f"{key_name}:{key_state}  {onkeys}")
+
+        return True
 
     def main(self):
         """Main."""
@@ -72,6 +61,7 @@ class CmdInput:
             return
 
         print(f"input_dev: {input_dev[0]}")
+        print("* long press 'S' to exit.")
         self.bt.read_loop(input_dev[0], self.cb_ev)
 
     def end(self):
