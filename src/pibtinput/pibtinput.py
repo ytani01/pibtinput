@@ -9,6 +9,12 @@ from .utils.mylogger import errmsg, get_logger
 class PiBtInput:
     """Bluetooth input."""
 
+    KEY = {
+        "down": evdev.KeyEvent.key_down,
+        "hold": evdev.KeyEvent.key_hold,
+        "up": evdev.KeyEvent.key_up,
+    }
+
     def __init__(self, debug=False) -> None:
         self.__debug = debug
         self.__log = get_logger(self.__class__.__name__, self.__debug)
