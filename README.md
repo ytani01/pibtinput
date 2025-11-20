@@ -3,6 +3,15 @@
 Python library for bluetooth
 
 
+## Install
+
+**XXX TBD XXX**
+
+``` bash
+sudo apt install evtest
+```
+
+
 ## ペアリング
 
 ### 順序が重要!: trust -> pair -> connect
