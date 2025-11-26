@@ -1,11 +1,10 @@
 #
 # (c) 2025 Yoichi Tanibayashi
 #
-import time
 
 import evdev
 
-from .utils.mylogger import errmsg, get_logger
+from .utils.mylogger import get_logger
 
 
 class PiBtInput:
