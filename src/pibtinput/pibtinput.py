@@ -1,6 +1,8 @@
 #
 # (c) 2025 Yoichi Tanibayashi
 #
+import time
+
 import evdev
 
 from .utils.mylogger import errmsg, get_logger
@@ -96,27 +98,23 @@ class PiBtInput:
             self.__log.error("cb_key_event=%s", cb_key_event)
             return
 
-        try:
-            for ev in dev.read_loop():
-                key_name, key_state = self.get_key_event(ev)
-                if not key_name:
-                    continue
+        for ev in dev.read_loop():
+            key_name, key_state = self.get_key_event(ev)
+            if not key_name:
+                continue
 
-                if key_state == evdev.KeyEvent.key_down:
-                    # キーが押下されたら、self.onkeysに加える
-                    self.onkeys[key_name] = 1
+            if key_state == evdev.KeyEvent.key_down:
+                # キーが押下されたら、self.onkeysに加える
+                self.onkeys[key_name] = 1
 
-                if key_state == evdev.KeyEvent.key_hold:
-                    # リピート
-                    self.onkeys[key_name] += 1
+            if key_state == evdev.KeyEvent.key_hold:
+                # リピート
+                self.onkeys[key_name] += 1
 
-                if key_state == evdev.KeyEvent.key_up:
-                    # キーが放されたら、self.onkeysから削除する
-                    del self.onkeys[key_name]
+            if key_state == evdev.KeyEvent.key_up:
+                # キーが放されたら、self.onkeysから削除する
+                del self.onkeys[key_name]
 
-                ret = cb_key_event(key_name, key_state, self.onkeys)
-                if not ret:
-                    break
-
-        except Exception as e:
-            self.__log.error(errmsg(e))
+            ret = cb_key_event(key_name, key_state, self.onkeys)
+            if not ret:
+                break

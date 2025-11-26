@@ -35,10 +35,10 @@ class CmdInput:
             self.__log.debug(f"{self.prev_onkeys} -> {onkeys}")
             self.prev_onkeys = onkeys.copy()
 
-            if onkeys.get("KEY_S"):
-                if onkeys["KEY_S"] > 10:
-                    print("Bye !")
-                    return False
+            # if onkeys.get("KEY_S"):
+            #     if onkeys["KEY_S"] > 10:
+            #         print("Bye !")
+            #         return False
 
             if key_state == evdev.KeyEvent.key_hold and not self.flag_repeat:
                 return True
