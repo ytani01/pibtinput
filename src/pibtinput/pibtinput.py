@@ -91,7 +91,7 @@ class PiBtInput:
         """Read loop."""
         self.__log.debug("dev=%s, cb_key_event=%s", dev, cb_key_event)
 
-        self.onkeys.clear()
+        # self.onkeys.clear()
 
         if not cb_key_event:
             self.__log.error("cb_key_event=%s", cb_key_event)
