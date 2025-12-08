@@ -4,7 +4,7 @@
 
 import evdev
 
-from .utils.mylogger import get_logger
+from .utils.mylogger import errmsg, get_logger
 
 
 class PiBtInput:
@@ -112,7 +112,10 @@ class PiBtInput:
 
             if key_state == evdev.KeyEvent.key_up:
                 # キーが放されたら、self.onkeysから削除する
-                del self.onkeys[key_name]
+                try:
+                    del self.onkeys[key_name]
+                except KeyError as e:
+                    self.__log.warning(errmsg(e))
 
             ret = cb_key_event(key_name, key_state, self.onkeys)
             if not ret:
