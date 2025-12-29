@@ -15,7 +15,7 @@ classifiers = [
     "Topic :: System :: Hardware",
     "Topic :: System :: Hardware :: Hardware Drivers",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = [
     "blessed",
     "click",
@@ -46,7 +46,7 @@ docstring-code-line-length = 78
 "conftest.py" = ["F401", "F811"]
 
 [[tool.mypy.overrides]]
-module = ['requests', 'evdev', 'click', 'blessed']
+module = ['requests', 'evdev', 'click', 'blessed', 'pytest']
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
