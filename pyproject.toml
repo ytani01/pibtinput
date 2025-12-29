@@ -35,7 +35,6 @@ pibtinput = "pibtinput.__main__:cli"
 [dependency-groups]
 dev = [
     "mypy>=1.18.2",
-    "pyright>=1.1.406",
     "pytest>=8.4.2",
     "ruff>=0.14.0",
 ]
@@ -47,7 +46,7 @@ docstring-code-line-length = 78
 "conftest.py" = ["F401", "F811"]
 
 [[tool.mypy.overrides]]
-module = ['requests']
+module = ['requests', 'evdev', 'click', 'blessed']
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

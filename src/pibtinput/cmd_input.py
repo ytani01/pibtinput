@@ -60,6 +60,8 @@ class CmdInput:
             self.__log.error("ambiguous: %s", [d.name for d in input_dev])
             return
 
+        # self.bt.start()
+
         print(f"input_dev: {input_dev[0]}")
         print("* long press 'S' to exit.")
         self.bt.read_loop(input_dev[0], self.cb_ev)
@@ -67,3 +69,4 @@ class CmdInput:
     def end(self):
         """End."""
         self.__log.debug("")
+        self.bt.end()

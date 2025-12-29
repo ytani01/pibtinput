@@ -1,13 +1,15 @@
 #
 # (c) 2025 Yoichi Tanibayashi
 #
+import queue
+import threading
 
 import evdev
 
 from .utils.mylogger import errmsg, get_logger
 
 
-class PiBtInput:
+class PiBtInput(threading.Thread):
     """Bluetooth input."""
 
     KEY = {
@@ -15,14 +17,61 @@ class PiBtInput:
         "hold": evdev.KeyEvent.key_hold,
         "up": evdev.KeyEvent.key_up,
     }
+    Q_TIMEOUT = 0.1
 
     def __init__(self, debug=False) -> None:
+        super().__init__(daemon=True)
         self.__debug = debug
         self.__log = get_logger(self.__class__.__name__, self.__debug)
         self.__log.debug("")
 
         # {'KEY_?': 1, 'KEY_?': 20, ...}
         self.onkeys: dict[str, int] = {}
+
+        self.in_q: queue.SimpleQueue = queue.SimpleQueue()
+        self.is_active = False
+        self.is_busy = False  # 処理中、または、キューに残っている
+        self.cb_key_event = None  # calllback function
+
+    def end(self):
+        """End."""
+        self.__log.debug("")
+
+        self.is_active = False
+        self.clear_q()
+        self.join()
+        self.__log.debug("done.")
+
+    def read_loop(self, dev, cb_key_event):
+        """Read loop."""
+        self.__log.debug("dev=%s, cb_key_event=%s", dev, cb_key_event)
+
+        # self.onkeys.clear()
+
+        self.cb_key_event = cb_key_event
+
+        self.start()
+
+        try:
+            for ev in dev.read_loop():
+                self.__log.debug("ev=%s", ev)
+                self.in_q.put(ev)
+
+        except Exception as e:
+            self.__log.error(errmsg(e))
+
+        self.end()
+
+    def clear_q(self):
+        """Clear queue."""
+
+        _count = 0
+        while not self.in_q.empty():
+            _count += 1
+            _ = self.in_q.get()
+
+        self.__log.debug("_count=%s", _count)
+        return _count
 
     def list_input_devs(self):
         """List input devices."""
@@ -87,20 +136,37 @@ class PiBtInput:
 
         return key_name, key_state
 
-    def read_loop(self, dev, cb_key_event):
-        """Read loop."""
-        self.__log.debug("dev=%s, cb_key_event=%s", dev, cb_key_event)
+    @property
+    def qsize(self) -> int:
+        """queue size."""
+        return self.in_q.qsize()
 
-        # self.onkeys.clear()
+    def run(self):
+        """Thread: run."""
+        self.__log.debug("")
 
-        if not cb_key_event:
-            self.__log.error("cb_key_event=%s", cb_key_event)
-            return
+        if self.qsize == 0:
+            self.is_busy = False
 
-        for ev in dev.read_loop():
-            key_name, key_state = self.get_key_event(ev)
+        self.is_active = True
+        while self.is_active:
+            try:
+                event = self.in_q.get(timeout=self.Q_TIMEOUT)
+            except queue.Empty:
+                continue
+
+            self.is_busy = True
+
+            key_name, key_state = self.get_key_event(event)
             if not key_name:
                 continue
+
+            self.__log.debug(
+                "qsize=%s,key_name=%a,key_state=%s",
+                self.in_q.qsize(),
+                key_name,
+                key_state,
+            )
 
             if key_state == evdev.KeyEvent.key_down:
                 # キーが押下されたら、self.onkeysに加える
@@ -117,6 +183,11 @@ class PiBtInput:
                 except KeyError as e:
                     self.__log.warning(errmsg(e))
 
-            ret = cb_key_event(key_name, key_state, self.onkeys)
-            if not ret:
-                break
+            if self.cb_key_event is not None:
+                self.is_active = self.cb_key_event(
+                    key_name, key_state, self.onkeys
+                )
+
+            self.__log.info("is_active=%s", self.is_active)
+
+        self.__log.debug("done.")
