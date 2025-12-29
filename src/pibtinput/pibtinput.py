@@ -188,6 +188,6 @@ class PiBtInput(threading.Thread):
                     key_name, key_state, self.onkeys
                 )
 
-            self.__log.info("is_active=%s", self.is_active)
+            # self.__log.info("is_active=%s", self.is_active)
 
         self.__log.debug("done.")
