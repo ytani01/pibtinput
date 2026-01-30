@@ -50,6 +50,14 @@ exit
 sudo hciconfig hci0 down
 sudo hciconfig hci0 up
 sudo systemctl restart bluetooth.service
+
+### 以下の場合の対応
+sudo hciconfig hci0 up
+Can't init device hci0: Operation not possible due to RF-kill (132)
+
+rfkill list
+
+rfkill unblock bluetooth
 ```
 
 ## 参考
